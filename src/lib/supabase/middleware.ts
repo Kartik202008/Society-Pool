@@ -71,7 +71,8 @@ export async function updateSession(request: NextRequest) {
   }
 
   // If already authenticated and navigating to /login, redirect to /dashboard
-  if ((user || demoRole) && pathname === "/login") {
+  // (unless user is arriving with an error message to display)
+  if ((user || demoRole) && pathname === "/login" && !request.nextUrl.searchParams.has("error")) {
     return createRedirect("/dashboard");
   }
 
