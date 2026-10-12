@@ -120,7 +120,7 @@ async function ActiveEventsList() {
 
   if (events.length === 0) {
     return (
-      <Card className="card-earthy border-[#D9C9B2] bg-white p-6 sm:p-8 text-center shadow-xs">
+      <Card className="card-earthy border-[#D9C9B2] bg-white p-6 sm:p-8 text-center shadow-xs animate-dashboard-card">
         <CardContent className="flex flex-col items-center justify-center space-y-4 p-2 sm:p-4">
           <div className="size-14 rounded-2xl bg-[#E8E3D6]/70 border border-[#D9C9B2] flex items-center justify-center text-[#6B7F5B]">
             <CalendarX2 className="size-7 text-[#6B7F5B]" />
@@ -144,10 +144,11 @@ async function ActiveEventsList() {
 
   return (
     <div className="space-y-4">
-      {events.map((event) => (
+      {events.map((event, index) => (
         <Card
           key={event.id}
-          className="card-earthy card-earthy-hover border-[#D9C9B2] bg-white overflow-hidden transition-all duration-200"
+          style={{ animationDelay: `${Math.min(500, 260 + index * 70)}ms` }}
+          className="card-earthy card-earthy-hover border-[#D9C9B2] bg-white overflow-hidden transition-all duration-200 animate-dashboard-card"
         >
           <CardContent className="p-4 sm:p-5 space-y-4">
             {/* Card Header Row: Title & Badge */}
@@ -283,7 +284,7 @@ async function DashboardHeader() {
   }
 
   return (
-    <header className="flex items-center justify-between pb-1">
+    <header className="flex items-center justify-between pb-1 animate-dashboard-header">
       <div className="space-y-0.5">
         <h1 className="text-2xl sm:text-3xl font-heading font-semibold tracking-tight text-[#2E3A2F]">
           Good Morning, {currentUser.name}
@@ -321,13 +322,13 @@ function HeaderSkeleton() {
 export default async function ResidentDashboard() {
   await connection();
   return (
-    <div className="relative min-h-screen bg-[#F8F6EE] text-[#2E3A2F]">
+    <div className="relative min-h-screen bg-[#F8F6EE] text-[#2E3A2F] overflow-x-hidden">
       {/* Isolated persistent ambient visual scenery */}
       <ScrollAtmosphere />
 
       <div className="relative z-10">
         {/* Top ambient earthy accent gradient bar */}
-        <div className="h-1.5 w-full gradient-earthy" />
+        <div className="h-1.5 w-full gradient-earthy animate-top-bar" />
 
       {/* ========================================================================= */}
       {/* HERO / HEADER SECTION                                                     */}
@@ -340,7 +341,7 @@ export default async function ResidentDashboard() {
           </Suspense>
 
           {/* 2. SAVINGS BANNER (Soft Card with subtle backdrop) */}
-          <Card className="card-earthy border-[#D9C9B2] bg-white/95 backdrop-blur-sm shadow-xs overflow-hidden">
+          <Card className="card-earthy border-[#D9C9B2] bg-white/95 backdrop-blur-sm shadow-xs overflow-hidden animate-dashboard-banner">
             <CardContent className="p-4 sm:p-5">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
@@ -379,7 +380,7 @@ export default async function ResidentDashboard() {
         {/* ========================================================================= */}
         {/* 3. SECTION TITLE                                                          */}
         {/* ========================================================================= */}
-        <div className="flex items-center justify-between pt-2">
+        <div className="flex items-center justify-between pt-2 animate-dashboard-section">
           <div className="flex items-center gap-2">
             <h2 className="text-lg sm:text-xl font-heading font-semibold text-[#2E3A2F]">
               Active Group Bookings in Society
@@ -400,7 +401,7 @@ export default async function ResidentDashboard() {
         {/* ========================================================================= */}
         {/* 5. BOTTOM ACTION: SUGGEST A SERVICE (Soft Card)                            */}
         {/* ========================================================================= */}
-        <Card className="card-earthy border-[#D9C9B2] bg-white/95 backdrop-blur-sm p-1">
+        <Card className="card-earthy border-[#D9C9B2] bg-white/95 backdrop-blur-sm p-1 animate-dashboard-suggest">
           <CardContent className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-[#6B7F5B] uppercase tracking-wide">
@@ -423,7 +424,7 @@ export default async function ResidentDashboard() {
         </Card>
 
         {/* Society Trust Footer */}
-        <footer className="pt-4 pb-12 text-center text-xs text-[#2E3A2F]/60 flex items-center justify-center gap-1.5">
+        <footer className="pt-4 pb-12 text-center text-xs text-[#2E3A2F]/60 flex items-center justify-center gap-1.5 animate-dashboard-footer">
           <ShieldCheck className="size-4 text-[#6B7F5B]" />
           <span>SocietyPool • Verified local vendors exclusively for {CURRENT_USER.society}</span>
         </footer>

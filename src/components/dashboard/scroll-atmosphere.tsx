@@ -16,7 +16,12 @@ interface ScrollAtmosphereProps {
 export function ScrollAtmosphere({ children }: ScrollAtmosphereProps = {}) {
   // scrollProgress ranges from 0 (top of page) to 1 (bottom of page)
   const [scrollProgress, setScrollProgress] = React.useState(0);
-  const [forcedScene, setForcedScene] = React.useState<string | null>(null);
+  const [forcedScene] = React.useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      return new URLSearchParams(window.location.search).get("scene");
+    }
+    return null;
+  });
 
   const towersRef = React.useRef<HTMLDivElement>(null);
   const gardensRef = React.useRef<HTMLDivElement>(null);
@@ -65,7 +70,6 @@ export function ScrollAtmosphere({ children }: ScrollAtmosphereProps = {}) {
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const scene = params.get("scene");
-    if (scene) setForcedScene(scene);
 
     const handleScroll = () => {
       const scrollTop =
@@ -113,7 +117,7 @@ export function ScrollAtmosphere({ children }: ScrollAtmosphereProps = {}) {
         <div
           ref={towersRef}
           id="society-scene-towers"
-          className="absolute inset-0 bg-cover bg-no-repeat bg-center transition-opacity duration-300 ease-out will-change-[opacity]"
+          className="absolute inset-0 bg-cover bg-no-repeat bg-center transition-opacity duration-300 ease-out will-change-[opacity] animate-dashboard-building"
           style={{
             backgroundImage: "url('/residential-hero.jpg')",
             backgroundPosition: "center 30%",

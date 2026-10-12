@@ -186,10 +186,302 @@
     background-repeat: no-repeat;
   }
 
+  /* ========================================================================= */
+  /* SEQUENTIAL ENTRANCE ANIMATIONS (Foodie-inspired, Apple-smooth easing)     */
+  /* ========================================================================= */
+
+  @keyframes slideDownFromTop {
+    0% {
+      opacity: 0;
+      transform: translateY(-28px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideBarFromTop {
+    0% {
+      opacity: 0;
+      transform: translateY(-100%);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideIllustrationFromLeft {
+    0% {
+      opacity: 0;
+      transform: translateX(-52px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes entranceBuildingBg {
+    0% {
+      opacity: 0;
+      transform: translateX(-28px) scale(1.02);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+  }
+
+  @keyframes entranceDashboardBuilding {
+    0% {
+      opacity: 0;
+      transform: translateX(-24px) scale(1.02);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+  }
+
+  @keyframes slideFormUp {
+    0% {
+      opacity: 0;
+      transform: translateY(22px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeSlideUpItem {
+    0% {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeInSoft {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  /* Reusable Animation Utility Classes */
+  .animate-top-bar {
+    animation: slideBarFromTop 650ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes slideBrandingBlockFromTop {
+    0% {
+      opacity: 0;
+      transform: translateY(-260px);
+    }
+    18% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-brand-block {
+    animation: slideBrandingBlockFromTop 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    will-change: transform, opacity;
+  }
+
+  /* Responsive residential building hero background */
+  .login-hero-bg {
+    background-image: url("/residential-hero.jpg");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center 20%;
+  }
+
+  @media (min-width: 640px) {
+    .login-hero-bg {
+      background-position: center 25%;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .login-hero-bg {
+      background-position: center 30%;
+    }
+  }
+
+  .animate-brand-top {
+    animation: slideDownFromTop 750ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .animate-hero-building-bg {
+    animation: entranceBuildingBg 900ms cubic-bezier(0.16, 1, 0.3, 1) 120ms both;
+  }
+
+  .animate-building-illustration {
+    animation: slideIllustrationFromLeft 800ms cubic-bezier(0.16, 1, 0.3, 1) 180ms both;
+  }
+
+  .animate-form-card {
+    animation: slideFormUp 550ms cubic-bezier(0.16, 1, 0.3, 1) 360ms both;
+  }
+
+  .animate-form-item-1 {
+    animation: fadeSlideUpItem 400ms cubic-bezier(0.16, 1, 0.3, 1) 440ms both;
+  }
+
+  .animate-form-item-2 {
+    animation: fadeSlideUpItem 400ms cubic-bezier(0.16, 1, 0.3, 1) 520ms both;
+  }
+
+  .animate-form-item-3 {
+    animation: fadeSlideUpItem 400ms cubic-bezier(0.16, 1, 0.3, 1) 600ms both;
+  }
+
+  .animate-form-item-4 {
+    animation: fadeSlideUpItem 400ms cubic-bezier(0.16, 1, 0.3, 1) 670ms both;
+  }
+
+  .animate-form-item-5 {
+    animation: fadeSlideUpItem 400ms cubic-bezier(0.16, 1, 0.3, 1) 740ms both;
+  }
+
+  .animate-form-item-6 {
+    animation: fadeInSoft 450ms cubic-bezier(0.16, 1, 0.3, 1) 800ms both;
+  }
+
+  /* Dashboard Specific Entrance Utilities */
+  .animate-dashboard-building {
+    animation: entranceDashboardBuilding 850ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .animate-dashboard-header {
+    animation: slideDownFromTop 600ms cubic-bezier(0.16, 1, 0.3, 1) 60ms both;
+  }
+
+  .animate-dashboard-banner {
+    animation: slideFormUp 500ms cubic-bezier(0.16, 1, 0.3, 1) 160ms both;
+  }
+
+  .animate-dashboard-section {
+    animation: fadeSlideUpItem 450ms cubic-bezier(0.16, 1, 0.3, 1) 240ms both;
+  }
+
+  .animate-dashboard-card {
+    animation: fadeSlideUpItem 450ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .animate-dashboard-suggest {
+    animation: fadeSlideUpItem 450ms cubic-bezier(0.16, 1, 0.3, 1) 400ms both;
+  }
+
+  .animate-dashboard-footer {
+    animation: fadeInSoft 450ms cubic-bezier(0.16, 1, 0.3, 1) 460ms both;
+  }
+
+  /* ========================================================================= */
+  /* SPLASH SCREEN BUILDING ANIMATION (Step 1 -> 2 -> 3 -> 4 -> 5)             */
+  /* ========================================================================= */
+
+  @keyframes splashBuildingsSequence {
+    0% {
+      opacity: 0;
+      transform: translateY(-120vh);
+      animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    15% {
+      opacity: 1;
+    }
+    25% {
+      opacity: 1;
+      transform: translateY(0);
+      animation-timing-function: linear;
+    }
+    75% {
+      opacity: 1;
+      transform: translateY(0);
+      animation-timing-function: cubic-bezier(0.55, 0.055, 0.675, 0.19);
+    }
+    95% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(120vh);
+    }
+  }
+
+  @keyframes splashScreenFade {
+    0%, 92% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes loginRevealFadeIn {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  .animate-splash-buildings {
+    animation: splashBuildingsSequence 2800ms both;
+    will-change: transform, opacity;
+  }
+
+  .animate-splash-screen {
+    animation: splashScreenFade 2850ms both;
+  }
+
+  .animate-login-reveal {
+    animation: loginRevealFadeIn 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .will-change-\[opacity\] {
       will-change: auto !important;
       transition: none !important;
+    }
+    .animate-splash-buildings,
+    .animate-splash-screen,
+    .animate-login-reveal,
+    .animate-top-bar,
+    .animate-brand-block,
+    .animate-brand-top,
+    .animate-hero-building-bg,
+    .animate-building-illustration,
+    .animate-form-card,
+    .animate-form-item-1,
+    .animate-form-item-2,
+    .animate-form-item-3,
+    .animate-form-item-4,
+    .animate-form-item-5,
+    .animate-form-item-6,
+    .animate-dashboard-building,
+    .animate-dashboard-header,
+    .animate-dashboard-banner,
+    .animate-dashboard-section,
+    .animate-dashboard-card,
+    .animate-dashboard-suggest,
+    .animate-dashboard-footer {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
     }
   }
 }

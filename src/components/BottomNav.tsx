@@ -8,8 +8,8 @@ import { Home, Layers, Sparkles, User } from "lucide-react";
 export function BottomNav() {
   const pathname = usePathname();
 
-  // If on login page, don't show the bottom nav
-  if (pathname === "/login") {
+  // If on login or signup page, don't show the bottom nav
+  if (pathname === "/login" || pathname === "/signup") {
     return null;
   }
 

@@ -10,16 +10,28 @@ import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import { getUserRole } from "@/lib/auth";
 import { toast } from "sonner";
+import { SplashScreen } from "@/components/splash-screen";
 
-export default function LoginPage() {
+interface LoginPageProps {
+  initialSignUp?: boolean;
+}
+
+export default function LoginPage({ initialSignUp = false }: LoginPageProps = {}) {
   const router = useRouter();
-  const [isSignUp, setIsSignUp] = React.useState(false);
+  const [showSplash, setShowSplash] = React.useState(true);
+  const [isSignUp, setIsSignUp] = React.useState(initialSignUp);
   const [isLoading, setIsLoading] = React.useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
 
   React.useEffect(() => {
     if (typeof window !== "undefined") {
       const searchParams = new URLSearchParams(window.location.search);
+      if (searchParams.get("mode") === "signup") {
+        setIsSignUp(true);
+      } else if (searchParams.get("mode") === "login") {
+        setIsSignUp(false);
+      }
+
       const hashParams = new URLSearchParams(
         window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash
       );
@@ -262,42 +274,73 @@ export default function LoginPage() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-[#F8F6EE] text-[#2E3A2F] flex flex-col justify-between relative overflow-hidden">
-      {/* Top ambient earthy accent gradient bar */}
-      <div className="h-1.5 w-full gradient-earthy z-10" />
+  if (showSplash) {
+    return <SplashScreen onComplete={() => setShowSplash(false)} />;
+  }
 
-      {/* Subtle residential building background overlay for login hero atmosphere */}
+  return (
+    <div className="min-h-screen bg-[#F8F6EE] text-[#2E3A2F] flex flex-col justify-between relative overflow-x-hidden overflow-y-auto animate-login-reveal">
+      {/* Top ambient earthy accent gradient bar */}
+      <div className="h-1.5 w-full gradient-earthy z-10 animate-top-bar" />
+
+      {/* Responsive residential building background at 100% opacity */}
       <div 
-        className="absolute inset-0 z-0 pointer-events-none opacity-25 hero-residential-bg" 
+        className="fixed inset-0 z-0 pointer-events-none opacity-100 login-hero-bg animate-hero-building-bg"
         style={{
-          backgroundPosition: "center 20%",
-          maskImage: "linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0) 100%)",
-          WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0) 100%)"
+          backgroundImage: "url('/residential-hero.jpg')",
+          backgroundSize: "cover",
+          backgroundRepeat: "no-repeat",
         }}
+        aria-hidden="true"
       />
 
-      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 relative z-10">
-        <div className="w-full max-w-md space-y-6">
-          {/* Brand Logo & Tagline */}
-          <div className="text-center space-y-2">
-            <div className="inline-flex size-14 rounded-2xl bg-[#E8E3D6] border border-[#D9C9B2] items-center justify-center text-[#C96F4F] shadow-xs">
-              <Building2 className="size-7" />
-            </div>
-            <div className="space-y-1">
-              <h1 className="text-3xl font-heading font-bold tracking-tight text-[#2E3A2F] flex items-center justify-center gap-1.5">
-                <span>SocietyPool</span>
-                <Sparkles className="size-5 text-[#C96F4F]" />
-              </h1>
-              <p className="text-xs sm:text-sm text-[#2E3A2F]/70 font-medium max-w-xs mx-auto">
-                Group-buying home services for housing societies
-              </p>
+      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 py-6 sm:py-8 relative z-10 w-full">
+        <div className="w-full max-w-md space-y-4 sm:space-y-6">
+          {/* Unified SocietyPool Branding Card Block with Residential Building Background */}
+          <div 
+            className="w-full relative card-earthy border border-[#D9C9B2] shadow-sm overflow-hidden rounded-2xl p-5 sm:p-6 text-center animate-brand-block"
+            style={{
+              animation: "slideBrandingBlockFromTop 900ms cubic-bezier(0.16, 1, 0.3, 1) both",
+              willChange: "transform, opacity",
+            }}
+          >
+            {/* Residential Building Background Image */}
+            <div 
+              className="absolute inset-0 z-0 bg-cover bg-no-repeat pointer-events-none"
+              style={{
+                backgroundImage: "url('/residential-hero.jpg')",
+                backgroundPosition: "center 28%",
+              }}
+            />
+            {/* Translucent theme overlay for clear building visibility while keeping text & logo 100% sharp */}
+            <div 
+              className="absolute inset-0 z-0 pointer-events-none"
+              style={{
+                background: "linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(248, 246, 238, 0.82) 100%)",
+                backdropFilter: "blur(1px)",
+                WebkitBackdropFilter: "blur(1px)",
+              }}
+            />
+
+            <div className="relative z-10 flex flex-col items-center space-y-2.5 sm:space-y-3">
+              <div className="inline-flex size-12 sm:size-14 rounded-2xl bg-[#E8E3D6]/90 border border-[#D9C9B2] items-center justify-center text-[#C96F4F] shadow-xs backdrop-blur-xs">
+                <Building2 className="size-6 sm:size-7" />
+              </div>
+              <div className="space-y-1">
+                <h1 className="text-2xl sm:text-3xl font-heading font-bold tracking-tight text-[#2E3A2F] flex items-center justify-center gap-1.5">
+                  <span>SocietyPool</span>
+                  <Sparkles className="size-5 text-[#C96F4F]" />
+                </h1>
+                <p className="text-xs sm:text-sm text-[#2E3A2F]/80 font-medium max-w-xs mx-auto leading-relaxed">
+                  Group-buying home services for housing societies
+                </p>
+              </div>
             </div>
           </div>
 
           {/* Login / Sign Up Card */}
-          <Card className="card-earthy border-[#D9C9B2] bg-white shadow-sm overflow-hidden rounded-2xl">
-            <CardHeader className="space-y-1.5 pb-4 pt-6 px-6 text-center">
+          <Card className="card-earthy border-[#D9C9B2] bg-white shadow-sm overflow-hidden rounded-2xl animate-form-card">
+            <CardHeader className="space-y-1.5 pb-4 pt-6 px-6 text-center animate-form-item-1">
               <CardTitle className="text-xl font-heading font-semibold text-[#2E3A2F]">
                 {isSignUp ? "Create an Account" : "Sign In to Your Society"}
               </CardTitle>
@@ -310,6 +353,7 @@ export default function LoginPage() {
 
             <CardContent className="px-6 pb-6 pt-0 space-y-4">
               <form onSubmit={handleSubmit} className="space-y-3.5">
+                <div className="space-y-3.5 animate-form-item-2">
                 {isSignUp && (
                   <div className="space-y-1.5">
                     <Label
@@ -488,126 +532,133 @@ export default function LoginPage() {
                     )}
                   </>
                 )}
+                </div>
 
                 {/* Submit Button (Terracotta Accent) */}
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-[#C96F4F] hover:bg-[#B85A3A] text-[#F8F6EE] font-semibold py-2.5 rounded-xl transition-all shadow-xs active:scale-[0.99] mt-2"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="size-4 animate-spin mr-2" />
-                      {isSignUp ? "Creating Account..." : "Signing In..."}
-                    </>
-                  ) : isSignUp ? (
-                    "Create Account"
-                  ) : (
-                    "Sign In"
-                  )}
-                </Button>
+                <div className="animate-form-item-3">
+                  <Button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-[#C96F4F] hover:bg-[#B85A3A] text-[#F8F6EE] font-semibold py-2.5 rounded-xl transition-all shadow-xs active:scale-[0.99] mt-2"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="size-4 animate-spin mr-2" />
+                        {isSignUp ? "Creating Account..." : "Signing In..."}
+                      </>
+                    ) : isSignUp ? (
+                      "Create Account"
+                    ) : (
+                      "Sign In"
+                    )}
+                  </Button>
+                </div>
               </form>
 
-              {/* Or separator */}
-              <div className="relative my-4">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-[#D9C9B2]/70" />
+              {/* Or separator & Google button */}
+              <div className="animate-form-item-4 space-y-4">
+                <div className="relative my-4">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-[#D9C9B2]/70" />
+                  </div>
+                  <div className="relative flex justify-center text-[11px] uppercase tracking-wider">
+                    <span className="bg-white px-3 text-[#2E3A2F]/60 font-semibold">
+                      Or continue with
+                    </span>
+                  </div>
                 </div>
-                <div className="relative flex justify-center text-[11px] uppercase tracking-wider">
-                  <span className="bg-white px-3 text-[#2E3A2F]/60 font-semibold">
-                    Or continue with
-                  </span>
-                </div>
+
+                {/* Continue with Google button */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isLoading || isGoogleLoading}
+                  onClick={handleGoogleSignIn}
+                  className="w-full border-[#D9C9B2] bg-[#F8F6EE]/50 hover:bg-[#E8E3D6]/50 text-[#2E3A2F] font-semibold rounded-xl py-2.5 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {isGoogleLoading ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin text-[#C96F4F]" />
+                      <span>Connecting to Google...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="size-4" viewBox="0 0 24 24">
+                        <path
+                          fill="#4285F4"
+                          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                        />
+                        <path
+                          fill="#34A853"
+                          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                        />
+                        <path
+                          fill="#FBBC05"
+                          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                        />
+                        <path
+                          fill="#EA4335"
+                          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                        />
+                      </svg>
+                      <span>Continue with Google</span>
+                    </>
+                  )}
+                </Button>
               </div>
 
-              {/* Continue with Google button */}
-              <Button
-                type="button"
-                variant="outline"
-                disabled={isLoading || isGoogleLoading}
-                onClick={handleGoogleSignIn}
-                className="w-full border-[#D9C9B2] bg-[#F8F6EE]/50 hover:bg-[#E8E3D6]/50 text-[#2E3A2F] font-semibold rounded-xl py-2.5 transition-colors flex items-center justify-center gap-2 cursor-pointer"
-              >
-                {isGoogleLoading ? (
-                  <>
-                    <Loader2 className="size-4 animate-spin text-[#C96F4F]" />
-                    <span>Connecting to Google...</span>
-                  </>
-                ) : (
-                  <>
-                    <svg className="size-4" viewBox="0 0 24 24">
-                      <path
-                        fill="#4285F4"
-                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                      />
-                      <path
-                        fill="#34A853"
-                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                      />
-                      <path
-                        fill="#FBBC05"
-                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                      />
-                      <path
-                        fill="#EA4335"
-                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                      />
-                    </svg>
-                    <span>Continue with Google</span>
-                  </>
-                )}
-              </Button>
-
-              {/* Quick Demo Access Buttons for Hackathon Evaluation */}
-              <div className="pt-2 border-t border-[#E8E3D6]/80 space-y-2">
-                <span className="text-[11px] font-semibold text-[#2E3A2F]/60 uppercase tracking-wider block text-center">
-                  Quick Demo Access
-                </span>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    type="button"
-                    onClick={() => handleQuickDemo("admin")}
-                    className="bg-[#2E3A2F] hover:bg-[#222b23] text-[#F8F6EE] font-medium text-xs rounded-xl py-2 cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
-                  >
-                    <ShieldCheck className="size-3.5 text-[#C96F4F]" />
-                    <span>Secretary (Admin)</span>
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={() => handleQuickDemo("resident")}
-                    className="bg-[#6B7F5B] hover:bg-[#5b6d4d] text-[#F8F6EE] font-medium text-xs rounded-xl py-2 cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
-                  >
-                    <User className="size-3.5" />
-                    <span>Resident (Rahul)</span>
-                  </Button>
+              {/* Quick Demo Access Buttons for Hackathon Evaluation & Toggle */}
+              <div className="animate-form-item-5 space-y-2">
+                <div className="pt-2 border-t border-[#E8E3D6]/80 space-y-2">
+                  <span className="text-[11px] font-semibold text-[#2E3A2F]/60 uppercase tracking-wider block text-center">
+                    Quick Demo Access
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      type="button"
+                      onClick={() => handleQuickDemo("admin")}
+                      className="bg-[#2E3A2F] hover:bg-[#222b23] text-[#F8F6EE] font-medium text-xs rounded-xl py-2 cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
+                    >
+                      <ShieldCheck className="size-3.5 text-[#C96F4F]" />
+                      <span>Secretary (Admin)</span>
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => handleQuickDemo("resident")}
+                      className="bg-[#6B7F5B] hover:bg-[#5b6d4d] text-[#F8F6EE] font-medium text-xs rounded-xl py-2 cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
+                    >
+                      <User className="size-3.5" />
+                      <span>Resident (Rahul)</span>
+                    </Button>
+                  </div>
                 </div>
-              </div>
 
-              {/* Sign Up / Sign In Toggle */}
-              <div className="pt-2 text-center text-xs text-[#2E3A2F]/75">
-                {isSignUp ? (
-                  <span>
-                    Already have an account?{" "}
-                    <button
-                      type="button"
-                      onClick={() => setIsSignUp(false)}
-                      className="font-semibold text-[#C96F4F] hover:underline"
-                    >
-                      Sign in
-                    </button>
-                  </span>
-                ) : (
-                  <span>
-                    New to your society?{" "}
-                    <button
-                      type="button"
-                      onClick={() => setIsSignUp(true)}
-                      className="font-semibold text-[#C96F4F] hover:underline"
-                    >
-                      Create an account
-                    </button>
-                  </span>
-                )}
+                {/* Sign Up / Sign In Toggle */}
+                <div className="pt-2 text-center text-xs text-[#2E3A2F]/75">
+                  {isSignUp ? (
+                    <span>
+                      Already have an account?{" "}
+                      <button
+                        type="button"
+                        onClick={() => setIsSignUp(false)}
+                        className="font-semibold text-[#C96F4F] hover:underline"
+                      >
+                        Sign in
+                      </button>
+                    </span>
+                  ) : (
+                    <span>
+                      New to your society?{" "}
+                      <button
+                        type="button"
+                        onClick={() => setIsSignUp(true)}
+                        className="font-semibold text-[#C96F4F] hover:underline"
+                      >
+                        Create an account
+                      </button>
+                    </span>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -615,7 +666,7 @@ export default function LoginPage() {
       </main>
 
       {/* Society Trust Footer */}
-      <footer className="py-4 text-center text-xs text-[#2E3A2F]/60 flex items-center justify-center gap-1.5">
+      <footer className="py-4 text-center text-xs text-[#2E3A2F]/60 flex items-center justify-center gap-1.5 animate-form-item-6">
         <ShieldCheck className="size-4 text-[#6B7F5B]" />
         <span>SocietyPool • Secure housing society portal</span>
       </footer>
