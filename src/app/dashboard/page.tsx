@@ -9,6 +9,10 @@ import {
   HelpCircle,
   CalendarX2,
   ChevronRight,
+  Clock,
+  CheckCircle,
+  CheckCircle2,
+  AlertTriangle,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -49,6 +53,12 @@ interface EventWithPricing extends Event {
   calculatedTargetCount: number;
   progressPercent: number;
   formattedSlotTime: string;
+  userParticipant?: {
+    id: string;
+    flat_no: string;
+    service_status?: string;
+    issue_description?: string | null;
+  } | null;
 }
 
 // Async component to fetch and render events from Supabase
@@ -56,10 +66,34 @@ async function ActiveEventsList() {
   await connection();
   const supabase = await createClient();
 
-  // 1. Fetch all events from events table where status = 'open', ordered by created_at descending
+  // 1. Fetch current user context to detect enrolled flat
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const cookieStore = await cookies();
+  const demoRole = cookieStore.get("demo_role")?.value;
+
+  let userFlatNo: string | null = null;
+  if (user) {
+    try {
+      const { data: profile } = await supabase
+        .from("users")
+        .select("flat_no")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (profile?.flat_no) userFlatNo = profile.flat_no;
+    } catch (err) {
+      console.warn("Could not load user flat_no:", err);
+    }
+  }
+
+  // 2. Fetch all events from events table with participants and service lifecycle columns
   const { data: rawEvents, error: eventsError } = await supabase
     .from("events")
-    .select("*, participants(id)")
+    .select(
+      "*, participants(id, flat_no, user_id, service_status, issue_description, resident_verified_at, vendor_completed_at)"
+    )
     .eq("status", "open")
     .order("created_at", { ascending: false });
 
@@ -70,13 +104,31 @@ async function ActiveEventsList() {
   const eventList: DatabaseEventRow[] =
     (rawEvents as unknown as DatabaseEventRow[]) ?? [];
 
-  // 2. Map events and calculate pricing
+  // 3. Map events and calculate pricing
   const events: EventWithPricing[] = eventList.map((row) => {
+    const participantsList = (row.participants as any[]) || [];
     // Calculate participant count using row.participants.length, handling null or empty
-    const participantCount =
-      row.participants && Array.isArray(row.participants)
-        ? row.participants.length
-        : 0;
+    const participantCount = participantsList.length;
+
+    // Detect if current resident is enrolled in this event
+    let myParticipant = null;
+    if (user?.id) {
+      myParticipant = participantsList.find((p) => p.user_id === user.id);
+      if (!myParticipant && userFlatNo) {
+        myParticipant = participantsList.find(
+          (p) => (p.flat_no || "").toLowerCase().trim() === userFlatNo!.toLowerCase().trim()
+        );
+      }
+    } else if (demoRole === "resident") {
+      myParticipant =
+        participantsList.find((p) => p.service_status === "awaiting_confirmation") ||
+        participantsList.find((p) =>
+          ["b-234", "b-402", "flat 565", "flat 994", "flat 256", "flat 904"].includes(
+            (p.flat_no || "").toLowerCase().trim()
+          )
+        ) ||
+        null;
+    }
 
     const parsedTiers = parsePriceTiers(row.price_tiers);
     const pricing = calculateEventPricing(
@@ -115,6 +167,14 @@ async function ActiveEventsList() {
       calculatedTargetCount: target,
       progressPercent,
       formattedSlotTime: formatSlotTime(row.slot_time),
+      userParticipant: myParticipant
+        ? {
+            id: myParticipant.id,
+            flat_no: myParticipant.flat_no,
+            service_status: myParticipant.service_status,
+            issue_description: myParticipant.issue_description,
+          }
+        : null,
     };
   });
 
@@ -142,8 +202,49 @@ async function ActiveEventsList() {
     );
   }
 
+  // Find any event with service awaiting confirmation for the resident
+  const awaitingEvent = events.find(
+    (e) => e.userParticipant?.service_status === "awaiting_confirmation"
+  );
+
   return (
     <div className="space-y-4">
+      {/* High-visibility Action Required Banner when vendor has finished a resident flat */}
+      {awaitingEvent && awaitingEvent.userParticipant && (
+        <Card className="border-amber-300 bg-amber-50/95 shadow-xs animate-dashboard-card overflow-hidden">
+          <CardContent className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="size-10 rounded-xl bg-amber-100 border border-amber-300 flex items-center justify-center text-amber-700 shrink-0 mt-0.5 sm:mt-0">
+                <Clock className="size-5 text-amber-600 animate-pulse" />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-amber-600 text-white font-bold text-[10px] px-2 py-0.5 rounded-md uppercase tracking-wider border-none">
+                    Action Required
+                  </Badge>
+                  <span className="text-xs font-bold text-amber-900">
+                    Flat {awaitingEvent.userParticipant.flat_no}
+                  </span>
+                </div>
+                <h4 className="text-sm sm:text-base font-heading font-bold text-amber-950">
+                  {awaitingEvent.title}: Service Completed by Vendor
+                </h4>
+                <p className="text-xs text-amber-900/80">
+                  The vendor has completed the service for your flat. Please sign off on completion or report any issue.
+                </p>
+              </div>
+            </div>
+
+            <Link href={`/event/${awaitingEvent.id}`} className="w-full sm:w-auto shrink-0">
+              <button className="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs rounded-xl px-4 py-2.5 shadow-xs cursor-pointer flex items-center justify-center gap-1.5 transition-all active:scale-95">
+                <span>Confirm Service</span>
+                <ChevronRight className="size-3.5" />
+              </button>
+            </Link>
+          </CardContent>
+        </Card>
+      )}
+
       {events.map((event, index) => (
         <Card
           key={event.id}
@@ -192,7 +293,7 @@ async function ActiveEventsList() {
               </div>
             </div>
 
-            {/* Realtime progress bar, dynamic price & JoinButton */}
+            {/* Realtime progress bar, dynamic price & JoinButton / Resident Action */}
             <EventRealtime
               eventId={event.id}
               initialParticipantCount={event.currentParticipants}
@@ -201,6 +302,7 @@ async function ActiveEventsList() {
               maxParticipants={event.calculatedTargetCount}
               formattedSlotTime={event.formattedSlotTime}
               status={event.status}
+              userParticipant={event.userParticipant}
               unit={
                 event.serviceCategory?.toLowerCase().includes("car")
                   ? "car"

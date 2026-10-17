@@ -1,4 +1,5 @@
 import { connection } from "next/server";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, CalendarX2 } from "lucide-react";
@@ -61,22 +62,104 @@ export default async function EventPage({ params }: EventPageProps) {
     );
   }
 
-  // 2. Fetch all participants from participants table where event_id = id
-  const { data: rawParticipants, error: participantsError } = await supabase
+  // 2. Fetch current user context to detect enrolled flat
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const cookieStore = await cookies();
+  const demoRole = cookieStore.get("demo_role")?.value;
+
+  let userFlatNo: string | null = null;
+  if (user) {
+    try {
+      const { data: profile } = await supabase
+        .from("users")
+        .select("flat_no")
+        .eq("id", user.id)
+        .single();
+      if (profile?.flat_no) userFlatNo = profile.flat_no;
+    } catch (err) {
+      console.warn("Could not load user flat_no:", err);
+    }
+    if (!userFlatNo && user.user_metadata?.flat_no) {
+      userFlatNo = user.user_metadata.flat_no;
+    }
+  }
+
+  // 3. Fetch all participants from participants table where event_id = id
+  let rawParticipants = null;
+  const fullQuery = await supabase
     .from("participants")
-    .select("id, flat_no, user_id, joined_at")
+    .select(
+      "id, flat_no, user_id, joined_at, service_status, issue_description, resident_verified_at, vendor_completed_at"
+    )
     .eq("event_id", id);
 
-  if (participantsError) {
-    console.warn("Notice: participants fetch error:", participantsError);
+  if (fullQuery.error) {
+    const standardQuery = await supabase
+      .from("participants")
+      .select("id, flat_no, user_id, joined_at, service_status, issue_description")
+      .eq("event_id", id);
+
+    if (standardQuery.error) {
+      const minimalQuery = await supabase
+        .from("participants")
+        .select("id, flat_no, user_id, joined_at")
+        .eq("event_id", id);
+      rawParticipants = minimalQuery.data;
+    } else {
+      rawParticipants = standardQuery.data;
+    }
+  } else {
+    rawParticipants = fullQuery.data;
   }
 
   const participants = rawParticipants || [];
+
+  // Find enrolled participant for the current resident session
+  let enrolledParticipant: any = null;
+  if (user) {
+    enrolledParticipant = participants.find((p: any) => p.user_id === user.id);
+    if (!enrolledParticipant && userFlatNo) {
+      enrolledParticipant = participants.find(
+        (p: any) =>
+          (p.flat_no || "").toLowerCase().trim() === userFlatNo!.toLowerCase().trim()
+      );
+    }
+    if (enrolledParticipant && !userFlatNo) {
+      userFlatNo = enrolledParticipant.flat_no;
+    }
+  }
+
+  // Fallback for demo resident or simulation mode
+  if (!enrolledParticipant && (!user || demoRole === "resident")) {
+    enrolledParticipant =
+      participants.find((p: any) => p.service_status === "awaiting_confirmation") ||
+      participants.find((p: any) =>
+        ["b-234", "b-402", "flat 565", "flat 994", "flat 256", "flat 904"].includes(
+          (p.flat_no || "").toLowerCase().trim()
+        )
+      ) ||
+      participants[0] ||
+      null;
+
+    if (enrolledParticipant && !userFlatNo) {
+      userFlatNo = enrolledParticipant.flat_no;
+    }
+  }
 
   const event = {
     ...(rawEvent as unknown as DatabaseEventRow),
     participants,
   };
 
-  return <EventDetailClient event={event} />;
+  const currentUser = {
+    id: user?.id || (demoRole === "resident" ? (enrolledParticipant?.user_id || "demo-resident") : null),
+    flatNo: userFlatNo,
+    role: demoRole || (user ? "resident" : null),
+    participantId: enrolledParticipant?.id || null,
+  };
+
+  return <EventDetailClient event={event} currentUser={currentUser} />;
 }

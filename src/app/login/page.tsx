@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
-import { Loader2, Sparkles, Building2, ShieldCheck, Mail, Lock, User, Home } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
+import { Loader2, Sparkles, Building2, ShieldCheck, Mail, Lock, User, Home, Wrench } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,14 +12,11 @@ import { getUserRole } from "@/lib/auth";
 import { toast } from "sonner";
 import { SplashScreen } from "@/components/splash-screen";
 
-interface LoginPageProps {
-  initialSignUp?: boolean;
-}
-
-export default function LoginPage({ initialSignUp = false }: LoginPageProps = {}) {
+export default function LoginPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const [showSplash, setShowSplash] = React.useState(true);
-  const [isSignUp, setIsSignUp] = React.useState(initialSignUp);
+  const [isSignUp, setIsSignUp] = React.useState(() => pathname?.startsWith("/signup") ?? false);
   const [isLoading, setIsLoading] = React.useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
 
@@ -56,7 +53,7 @@ export default function LoginPage({ initialSignUp = false }: LoginPageProps = {}
   const [fullName, setFullName] = React.useState("");
   const [societyName, setSocietyName] = React.useState("");
   const [flatNumber, setFlatNumber] = React.useState("");
-  const [accountType, setAccountType] = React.useState<"resident" | "admin">("resident");
+  const [accountType, setAccountType] = React.useState<"resident" | "admin" | "vendor">("resident");
   const [inviteCode, setInviteCode] = React.useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -106,7 +103,7 @@ export default function LoginPage({ initialSignUp = false }: LoginPageProps = {}
     try {
       if (isSignUp) {
         // Sign Up flow
-        const assignedRole = accountType === "admin" ? "admin" : "resident";
+        const assignedRole = accountType;
         const cleanSociety = societyName.trim();
 
         // 1. Sync or retrieve society record
@@ -141,8 +138,9 @@ export default function LoginPage({ initialSignUp = false }: LoginPageProps = {}
             data: {
               name: fullName.trim(),
               society_name: cleanSociety,
-              flat_no: flatNumber.trim(),
+              flat_no: flatNumber.trim() || (assignedRole === "vendor" ? "Vendor Office" : "Flat"),
               role: assignedRole,
+              vendor_name: assignedRole === "vendor" ? fullName.trim() : undefined,
             },
           },
         });
@@ -163,7 +161,7 @@ export default function LoginPage({ initialSignUp = false }: LoginPageProps = {}
             await supabase.from("users").upsert({
               id: data.user.id,
               name: fullName.trim(),
-              flat_no: flatNumber.trim(),
+              flat_no: flatNumber.trim() || (assignedRole === "vendor" ? "Vendor Office" : "Flat"),
               society_id: societyId,
               role: assignedRole,
             });
@@ -175,7 +173,12 @@ export default function LoginPage({ initialSignUp = false }: LoginPageProps = {}
         if (data.session) {
           document.cookie = `demo_role=${assignedRole}; path=/; max-age=86400; SameSite=Lax`;
           toast.success("Account created! Welcome to SocietyPool.");
-          window.location.href = "/dashboard";
+          window.location.href =
+            assignedRole === "vendor"
+              ? "/vendor"
+              : assignedRole === "admin"
+              ? "/admin"
+              : "/dashboard";
         } else if (data.user) {
           toast.success("Account created! Please sign in with your email and password.");
           setIsSignUp(false);
@@ -210,7 +213,7 @@ export default function LoginPage({ initialSignUp = false }: LoginPageProps = {}
         if (data.user) {
           const role = await getUserRole(supabase, data.user, null);
           document.cookie = `demo_role=${role}; path=/; max-age=86400; SameSite=Lax`;
-          const target = "/dashboard";
+          const target = role === "vendor" ? "/vendor" : role === "admin" ? "/admin" : "/dashboard";
           toast.success("Welcome back!");
           window.location.href = target;
         }
@@ -228,10 +231,18 @@ export default function LoginPage({ initialSignUp = false }: LoginPageProps = {}
     }
   };
 
-  const handleQuickDemo = (role: "admin" | "resident") => {
+  const handleQuickDemo = (role: "admin" | "resident" | "vendor") => {
     document.cookie = `demo_role=${role}; path=/; max-age=86400`;
-    toast.success(`Demo Access: Entering as ${role === "admin" ? "Society Secretary" : "Resident"}`);
-    window.location.href = role === "admin" ? "/admin" : "/dashboard";
+    toast.success(
+      `Demo Access: Entering as ${
+        role === "admin"
+          ? "Society Secretary"
+          : role === "vendor"
+          ? "Service Partner (CoolCare Express)"
+          : "Resident (Rahul)"
+      }`
+    );
+    window.location.href = role === "admin" ? "/admin" : role === "vendor" ? "/vendor" : "/dashboard";
   };
 
   const handleGoogleSignIn = async () => {
@@ -462,46 +473,65 @@ export default function LoginPage({ initialSignUp = false }: LoginPageProps = {}
                       />
                     </div>
 
-                    {/* Account Type Selector (Resident vs Society Admin) */}
+                    {/* Account Type Selector (Resident vs Society Admin vs Vendor) */}
                     <div className="space-y-1.5 pt-1">
                       <Label className="text-xs font-semibold text-[#2E3A2F]">Account Type</Label>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-3 gap-2">
                         <button
                           type="button"
                           onClick={() => setAccountType("resident")}
-                          className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+                          className={`flex items-center gap-1.5 p-2 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
                             accountType === "resident"
                               ? "bg-[#2E3A2F] text-[#F8F6EE] border-[#2E3A2F] shadow-xs"
                               : "bg-[#F8F6EE]/60 text-[#2E3A2F]/80 border-[#D9C9B2] hover:bg-[#E8E3D6]"
                           }`}
                         >
                           <span
-                            className={`size-3.5 rounded-full border flex items-center justify-center shrink-0 ${
+                            className={`size-3 rounded-full border flex items-center justify-center shrink-0 ${
                               accountType === "resident" ? "border-white bg-[#C96F4F]" : "border-[#D9C9B2]"
                             }`}
                           >
-                            {accountType === "resident" && <span className="size-1.5 rounded-full bg-white" />}
+                            {accountType === "resident" && <span className="size-1 rounded-full bg-white" />}
                           </span>
-                          <span>Resident</span>
+                          <span className="truncate">Resident</span>
                         </button>
 
                         <button
                           type="button"
                           onClick={() => setAccountType("admin")}
-                          className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+                          className={`flex items-center gap-1.5 p-2 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
                             accountType === "admin"
                               ? "bg-[#2E3A2F] text-[#F8F6EE] border-[#2E3A2F] shadow-xs"
                               : "bg-[#F8F6EE]/60 text-[#2E3A2F]/80 border-[#D9C9B2] hover:bg-[#E8E3D6]"
                           }`}
                         >
                           <span
-                            className={`size-3.5 rounded-full border flex items-center justify-center shrink-0 ${
+                            className={`size-3 rounded-full border flex items-center justify-center shrink-0 ${
                               accountType === "admin" ? "border-white bg-[#C96F4F]" : "border-[#D9C9B2]"
                             }`}
                           >
-                            {accountType === "admin" && <span className="size-1.5 rounded-full bg-white" />}
+                            {accountType === "admin" && <span className="size-1 rounded-full bg-white" />}
                           </span>
-                          <span>Society Admin</span>
+                          <span className="truncate">Secretary</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setAccountType("vendor")}
+                          className={`flex items-center gap-1.5 p-2 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+                            accountType === "vendor"
+                              ? "bg-[#2E3A2F] text-[#F8F6EE] border-[#2E3A2F] shadow-xs"
+                              : "bg-[#F8F6EE]/60 text-[#2E3A2F]/80 border-[#D9C9B2] hover:bg-[#E8E3D6]"
+                          }`}
+                        >
+                          <span
+                            className={`size-3 rounded-full border flex items-center justify-center shrink-0 ${
+                              accountType === "vendor" ? "border-white bg-[#C96F4F]" : "border-[#D9C9B2]"
+                            }`}
+                          >
+                            {accountType === "vendor" && <span className="size-1 rounded-full bg-white" />}
+                          </span>
+                          <span className="truncate">Vendor</span>
                         </button>
                       </div>
                     </div>
@@ -613,14 +643,14 @@ export default function LoginPage({ initialSignUp = false }: LoginPageProps = {}
                   <span className="text-[11px] font-semibold text-[#2E3A2F]/60 uppercase tracking-wider block text-center">
                     Quick Demo Access
                   </span>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     <Button
                       type="button"
                       onClick={() => handleQuickDemo("admin")}
                       className="bg-[#2E3A2F] hover:bg-[#222b23] text-[#F8F6EE] font-medium text-xs rounded-xl py-2 cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
                     >
                       <ShieldCheck className="size-3.5 text-[#C96F4F]" />
-                      <span>Secretary (Admin)</span>
+                      <span className="truncate">Secretary</span>
                     </Button>
                     <Button
                       type="button"
@@ -628,7 +658,15 @@ export default function LoginPage({ initialSignUp = false }: LoginPageProps = {}
                       className="bg-[#6B7F5B] hover:bg-[#5b6d4d] text-[#F8F6EE] font-medium text-xs rounded-xl py-2 cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
                     >
                       <User className="size-3.5" />
-                      <span>Resident (Rahul)</span>
+                      <span className="truncate">Resident</span>
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => handleQuickDemo("vendor")}
+                      className="bg-[#C96F4F] hover:bg-[#B85A3A] text-[#F8F6EE] font-medium text-xs rounded-xl py-2 cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
+                    >
+                      <Wrench className="size-3.5" />
+                      <span className="truncate">Vendor</span>
                     </Button>
                   </div>
                 </div>

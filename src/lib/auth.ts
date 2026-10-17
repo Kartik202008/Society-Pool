@@ -1,6 +1,6 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 
-export type UserRole = "admin" | "resident";
+export type UserRole = "admin" | "resident" | "vendor";
 
 /**
  * Single source of truth for user role detection across the entire application:
@@ -28,7 +28,10 @@ export async function getUserRole(
       if (profile?.role === "admin") {
         return "admin";
       }
-      if (profile?.role === "resident") {
+      if (profile?.role === "vendor") {
+        return "vendor";
+      }
+      if (profile?.role === "resident" && !demoRole) {
         return "resident";
       }
     } catch {
@@ -38,13 +41,21 @@ export async function getUserRole(
     if (user.user_metadata?.role === "admin") {
       return "admin";
     }
-    if (user.user_metadata?.role === "resident") {
+    if (user.user_metadata?.role === "vendor") {
+      return "vendor";
+    }
+    if (user.user_metadata?.role === "resident" && !demoRole) {
       return "resident";
     }
+
+    // Allow explicit demo role cookie when evaluating or testing vendor/admin flows
+    if (demoRole === "admin") return "admin";
+    if (demoRole === "vendor") return "vendor";
 
     return "resident";
   }
 
   if (demoRole === "admin") return "admin";
+  if (demoRole === "vendor") return "vendor";
   return "resident";
 }

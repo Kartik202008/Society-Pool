@@ -7,5 +7,5 @@ import LoginPage from "@/app/login/page";
  * sequence as /login, defaulted to the Sign Up view.
  */
 export default function SignUpPage() {
-  return <LoginPage initialSignUp={true} />;
+  return <LoginPage />;
 }

@@ -97,6 +97,12 @@ export interface DatabaseEventRow {
   participants?: { id: string }[] | null;
 }
 
+export type FlatServiceStatus =
+  | "remaining"
+  | "awaiting_confirmation"
+  | "verified"
+  | "issue_reported";
+
 export type ParticipantStatus =
   | "joined"
   | "confirmed"

@@ -14,13 +14,14 @@ export function BottomNav() {
   }
 
   const isAdmin = pathname.startsWith("/admin");
+  const isVendor = pathname.startsWith("/vendor");
 
   const navItems = [
     {
       label: "Home",
-      href: isAdmin ? "/admin" : "/dashboard",
+      href: isVendor ? "/vendor" : isAdmin ? "/admin" : "/dashboard",
       icon: Home,
-      isActive: pathname === "/dashboard" || pathname === "/admin",
+      isActive: pathname === "/dashboard" || pathname === "/admin" || pathname === "/vendor",
     },
     {
       label: "Activity",

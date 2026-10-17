@@ -1,9 +1,20 @@
 "use client";
 
 import * as React from "react";
-import { Users, Calendar, Sparkles } from "lucide-react";
+import Link from "next/link";
+import {
+  Users,
+  Calendar,
+  Sparkles,
+  Clock,
+  CheckCircle,
+  CheckCircle2,
+  AlertTriangle,
+  ChevronRight,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { calculateEventPricing } from "@/lib/pricing";
 import { JoinButton } from "@/components/JoinButton";
@@ -19,6 +30,12 @@ export interface EventRealtimeProps {
   unit?: string;
   className?: string;
   status?: string;
+  userParticipant?: {
+    id: string;
+    flat_no: string;
+    service_status?: string;
+    issue_description?: string | null;
+  } | null;
 }
 
 export function EventRealtime({
@@ -31,6 +48,7 @@ export function EventRealtime({
   unit = "flat",
   className = "",
   status = "open",
+  userParticipant = null,
 }: EventRealtimeProps) {
   const [eventStatus, setEventStatus] = React.useState(status);
   const [participantCount, setParticipantCount] = React.useState(
@@ -259,8 +277,27 @@ export function EventRealtime({
         </div>
       </div>
 
+      {/* Action Required Banner for resident flat awaiting sign-off */}
+      {userParticipant?.service_status === "awaiting_confirmation" && (
+        <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-950 text-xs flex items-center justify-between gap-2 animate-pulse">
+          <div className="flex items-center gap-2">
+            <Clock className="size-4 text-amber-600 shrink-0" />
+            <span>
+              Vendor completed service for <strong>{userParticipant.flat_no}</strong>. Awaiting your sign-off!
+            </span>
+          </div>
+          <Link
+            href={`/event/${eventId}`}
+            className="inline-flex items-center gap-1 font-bold text-amber-900 hover:text-amber-950 underline shrink-0"
+          >
+            <span>Review</span>
+            <ChevronRight className="size-3.5" />
+          </Link>
+        </div>
+      )}
+
       {/* ========================================================================= */}
-      {/* 2. FOOTER ROW: Dynamic Price & Join Button                                */}
+      {/* 2. FOOTER ROW: Dynamic Price & Join Button / Resident Action              */}
       {/* ========================================================================= */}
       <div className="flex items-center justify-between pt-1 border-t border-[#D9C9B2]/50 flex-wrap gap-2">
         <div className="flex items-center gap-2 flex-wrap">
@@ -296,13 +333,44 @@ export function EventRealtime({
           )}
         </div>
 
-        <JoinButton
-          eventId={eventId}
-          currentPrice={pricing.currentPrice}
-          onJoined={handleOptimisticJoin}
-          disabled={eventStatus === "cancelled"}
-          disabledLabel="Booking Cancelled"
-        />
+        {userParticipant ? (
+          userParticipant.service_status === "awaiting_confirmation" ? (
+            <Link href={`/event/${eventId}`}>
+              <Button
+                size="sm"
+                className="bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs px-3.5 py-2 rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 transition-all active:scale-95 animate-pulse"
+              >
+                <Clock className="size-3.5" />
+                <span>Confirm Service (Flat {userParticipant.flat_no})</span>
+              </Button>
+            </Link>
+          ) : userParticipant.service_status === "verified" ? (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-semibold">
+              <CheckCircle className="size-3.5 text-emerald-600" />
+              <span>Service Verified ({userParticipant.flat_no})</span>
+            </div>
+          ) : userParticipant.service_status === "issue_reported" ? (
+            <Link href={`/event/${eventId}`}>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 border border-rose-300 text-rose-800 text-xs font-semibold hover:bg-rose-100 transition-colors cursor-pointer">
+                <AlertTriangle className="size-3.5 text-rose-600" />
+                <span>Issue Logged ({userParticipant.flat_no})</span>
+              </div>
+            </Link>
+          ) : (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#E8E3D6] border border-[#D9C9B2] text-[#2E3A2F] text-xs font-semibold">
+              <CheckCircle2 className="size-3.5 text-[#6B7F5B]" />
+              <span>Joined ({userParticipant.flat_no})</span>
+            </div>
+          )
+        ) : (
+          <JoinButton
+            eventId={eventId}
+            currentPrice={pricing.currentPrice}
+            onJoined={handleOptimisticJoin}
+            disabled={eventStatus === "cancelled"}
+            disabledLabel="Booking Cancelled"
+          />
+        )}
       </div>
     </div>
   );

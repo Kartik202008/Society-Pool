@@ -2,7 +2,7 @@ import { createGoogle } from "@ai-sdk/google";
 import { streamText } from "ai";
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
-import { getUserRole } from "@/lib/auth";
+import { getUserRole, type UserRole } from "@/lib/auth";
 
 export const maxDuration = 30;
 
@@ -16,7 +16,7 @@ interface EventDraft {
   tiers: { minFlats: number; maxFlats: number; price: number }[];
 }
 
-function parseFallbackDraft(userPrompt: string, role: "admin" | "resident" = "admin"): { message: string; draft?: EventDraft } {
+function parseFallbackDraft(userPrompt: string, role: UserRole = "admin"): { message: string; draft?: EventDraft } {
   const lower = userPrompt.toLowerCase();
 
   // Check if user is asking to create an event or pool

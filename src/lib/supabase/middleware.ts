@@ -44,6 +44,7 @@ export async function updateSession(request: NextRequest) {
   const isProtectedRoute =
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/admin") ||
+    pathname.startsWith("/vendor") ||
     pathname.startsWith("/profile") ||
     pathname.startsWith("/activity") ||
     pathname.startsWith("/copilot") ||
@@ -65,14 +66,21 @@ export async function updateSession(request: NextRequest) {
     return createRedirect("/login");
   }
 
-  // Resident role cannot access /admin
-  if (effectiveRole === "resident" && pathname.startsWith("/admin")) {
+  // Resident role cannot access /admin or /vendor
+  if (effectiveRole === "resident" && (pathname.startsWith("/admin") || pathname.startsWith("/vendor"))) {
     return createRedirect("/dashboard?error=access_restricted");
   }
 
-  // If already authenticated and navigating to /login, redirect to /dashboard
+  // Vendor role cannot access /admin
+  if (effectiveRole === "vendor" && pathname.startsWith("/admin")) {
+    return createRedirect("/vendor?error=access_restricted");
+  }
+
+  // If already authenticated and navigating to /login, redirect to role-appropriate home
   // (unless user is arriving with an error message to display)
   if ((user || demoRole) && pathname === "/login" && !request.nextUrl.searchParams.has("error")) {
+    if (effectiveRole === "admin") return createRedirect("/admin");
+    if (effectiveRole === "vendor") return createRedirect("/vendor");
     return createRedirect("/dashboard");
   }
 
