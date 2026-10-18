@@ -361,6 +361,9 @@ export function EventDetailClient({
     return sorted[sorted.length - 1];
   }, [tiers, participantCount]);
 
+  const isVendor = currentUser?.role === "vendor";
+  const isResident = !isVendor;
+
   // WhatsApp share link generator: dynamic origin and rich structured message
   const getWhatsAppShareUrl = () => {
     if (typeof window === "undefined") return "#";
@@ -535,209 +538,245 @@ ${currentUrl}`;
           </Card>
         </section>
 
-        {/* Resident Flat Service Verification & Handoff Card */}
-        <section aria-labelledby="resident-service-verification">
-          <Card className="card-earthy border-[#D9C9B2] bg-white overflow-hidden shadow-xs relative">
-            <div
-              className={`h-1.5 w-full ${
-                !myParticipant
-                  ? "bg-[#D9C9B2]"
-                  : myParticipant.service_status === "verified"
-                  ? "bg-emerald-600"
-                  : myParticipant.service_status === "awaiting_confirmation"
-                  ? "bg-amber-500 animate-pulse"
-                  : myParticipant.service_status === "issue_reported"
-                  ? "bg-rose-500"
-                  : "bg-[#6B7F5B]"
-              }`}
-            />
-            <CardContent className="p-5 sm:p-6 space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] uppercase tracking-wider font-semibold text-[#6B7F5B]">
-                      Resident Service Verification
-                    </span>
-                    <span className="size-1 rounded-full bg-[#C96F4F]" />
-                    <span className="text-xs font-bold text-[#2E3A2F]">
-                      {myParticipant ? `Flat ${myParticipant.flat_no}` : "Not Enrolled"}
-                    </span>
-                  </div>
-
-                  <h3 className="text-base sm:text-lg font-heading font-bold text-[#2E3A2F]">
-                    {!myParticipant && "Join this Group Booking to Enable Service Verification"}
-                    {myParticipant && myParticipant.service_status === "verified" && "Service Confirmed & Verified"}
-                    {myParticipant && myParticipant.service_status === "awaiting_confirmation" &&
-                      "Vendor Completed — Awaiting Your Sign-Off"}
-                    {myParticipant && myParticipant.service_status === "issue_reported" &&
-                      "Service Issue Reported"}
-                    {myParticipant && (!myParticipant.service_status ||
-                      myParticipant.service_status === "remaining") &&
-                      "Service Scheduled — Awaiting Vendor Completion"}
-                  </h3>
-                </div>
-
-                <div>
-                  {!myParticipant && (
-                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#2E3A2F]/70 bg-[#2E3A2F]/5 px-3 py-1 rounded-full border border-[#D9C9B2]">
-                      <Info className="size-4 text-[#2E3A2F]/60" />
-                      <span>Not Joined</span>
-                    </span>
-                  )}
-                  {myParticipant && myParticipant.service_status === "verified" && (
-                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-300">
-                      <CheckCircle className="size-4 text-emerald-600" />
-                      <span>Resident Verified</span>
-                    </span>
-                  )}
-                  {myParticipant && myParticipant.service_status === "awaiting_confirmation" && (
-                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-800 bg-amber-50 px-3 py-1 rounded-full border border-amber-300 animate-pulse">
-                      <Clock className="size-4 text-amber-600" />
-                      <span>Action Required</span>
-                    </span>
-                  )}
-                  {myParticipant && myParticipant.service_status === "issue_reported" && (
-                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-800 bg-rose-50 px-3 py-1 rounded-full border border-rose-300">
-                      <AlertTriangle className="size-4 text-rose-600" />
-                      <span>Issue Flagged</span>
-                    </span>
-                  )}
-                  {myParticipant && (!myParticipant.service_status ||
-                    myParticipant.service_status === "remaining") && (
-                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#2E3A2F]/70 bg-[#2E3A2F]/5 px-3 py-1 rounded-full border border-[#D9C9B2]">
-                      <Clock className="size-4 text-[#2E3A2F]/60" />
-                      <span>Awaiting Vendor Visit</span>
-                    </span>
-                  )}
-                </div>
+        {/* Notice for Vendors */}
+        {isVendor && (
+          <section aria-labelledby="vendor-admin-view-notice">
+            <Card className="border-[#D9C9B2] bg-[#FAF9F5] p-4 text-xs text-[#2E3A2F]/80 shadow-2xs">
+              <div className="flex items-center gap-2 font-semibold text-[#2E3A2F]">
+                <ShieldCheck className="size-4 text-[#6B7F5B]" />
+                <span>
+                  Viewing as Partner Vendor
+                </span>
               </div>
+              <p className="mt-1 text-[#2E3A2F]/70">
+                Service verification actions (Confirm Service and Report Issue) are accessible only to enrolled resident flats. You can monitor overall flat progress in the Participant List below.
+              </p>
+            </Card>
+          </section>
+        )}
 
-              {/* State Explanations & Action Triggers */}
-              {!myParticipant && (
-                <div className="bg-[#F8F6EE] border border-[#D9C9B2]/80 rounded-xl p-4 text-xs text-[#2E3A2F]/80 space-y-2">
-                  <div className="flex items-center gap-2 font-semibold text-[#2E3A2F]">
-                    <Info className="size-4 text-[#C96F4F] shrink-0" />
-                    <span>You have not joined this booking yet.</span>
+        {/* Resident Flat Service Verification & Handoff Card */}
+        {isResident && (
+          <section aria-labelledby="resident-service-verification">
+            <Card
+              className={`card-earthy overflow-hidden shadow-xs relative transition-all ${
+                myParticipant?.service_status === "awaiting_confirmation"
+                  ? "border-amber-400 bg-amber-50/40 ring-1 ring-amber-300"
+                  : "border-[#D9C9B2] bg-white"
+              }`}
+            >
+              <div
+                className={`h-1.5 w-full ${
+                  !myParticipant
+                    ? "bg-[#D9C9B2]"
+                    : myParticipant.service_status === "verified"
+                    ? "bg-emerald-600"
+                    : myParticipant.service_status === "awaiting_confirmation"
+                    ? "bg-amber-500 animate-pulse"
+                    : myParticipant.service_status === "issue_reported"
+                    ? "bg-rose-500"
+                    : "bg-[#6B7F5B]"
+                }`}
+              />
+              <CardContent className="p-5 sm:p-6 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] uppercase tracking-wider font-semibold text-[#6B7F5B]">
+                        Resident Service Verification
+                      </span>
+                      <span className="size-1 rounded-full bg-[#C96F4F]" />
+                      <span className="text-xs font-bold text-[#2E3A2F]">
+                        {myParticipant ? `Flat ${myParticipant.flat_no}` : "Not Enrolled"}
+                      </span>
+                    </div>
+
+                    <h3 className="text-base sm:text-lg font-heading font-bold text-[#2E3A2F]">
+                      {!myParticipant && "Join this Group Booking to Enable Service Verification"}
+                      {myParticipant && myParticipant.service_status === "verified" && "Service Confirmed & Verified"}
+                      {myParticipant && myParticipant.service_status === "awaiting_confirmation" &&
+                        "Action Required — Service Completed by Vendor"}
+                      {myParticipant && myParticipant.service_status === "issue_reported" &&
+                        "Service Issue Reported"}
+                      {myParticipant && (!myParticipant.service_status ||
+                        myParticipant.service_status === "remaining") &&
+                        "Service Scheduled — Awaiting Vendor Completion"}
+                    </h3>
                   </div>
-                  <p className="leading-relaxed">
-                    You must join this society group booking pool with your flat first to schedule service and unlock wholesale society pricing.
-                    Once joined and {event.vendor_name || "the vendor"} marks your service complete from their dashboard, the <strong>Confirm Service</strong> and <strong>Report Issue</strong> actions will appear here for your sign-off.
-                  </p>
-                </div>
-              )}
 
-              {myParticipant && (!myParticipant.service_status || myParticipant.service_status === "remaining") && (
-                <div className="bg-[#F8F6EE] border border-[#D9C9B2]/80 rounded-xl p-4 text-xs text-[#2E3A2F]/80 space-y-2">
-                  <div className="flex items-center gap-2 font-semibold text-[#2E3A2F]">
-                    <Clock className="size-4 text-[#6B7F5B] shrink-0" />
-                    <span>Vendor has not marked your flat complete yet.</span>
-                  </div>
-                  <p className="leading-relaxed">
-                    Your flat (<strong>{myParticipant.flat_no}</strong>) is confirmed and enrolled in this pool. Service will be executed during the scheduled slot ({formatSlotTime(event.slot_time)}).
-                    Verification controls (<strong>Confirm Service</strong> and <strong>Report Issue</strong>) will automatically become active here as soon as {event.vendor_name || "the vendor"} finishes the job and records completion on their dashboard.
-                  </p>
-                </div>
-              )}
-
-              {myParticipant && myParticipant.service_status === "awaiting_confirmation" && (
-                <div className="bg-amber-50/80 border border-amber-300 rounded-xl p-4 space-y-3">
-                  <p className="text-xs text-amber-950 leading-relaxed">
-                    <strong>{event.vendor_name || "The vendor"}</strong> has marked the service complete for <strong>{myParticipant.flat_no}</strong>. Please confirm if the service was delivered satisfactorily or report an issue if anything was missed.
-                  </p>
-
-                  <div className="flex flex-wrap items-center gap-2.5 pt-1">
-                    <Button
-                      size="sm"
-                      disabled={isSubmittingAction}
-                      onClick={() => handleResidentVerify(myParticipant.id)}
-                      className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs px-4 py-2.5 rounded-xl cursor-pointer shadow-xs flex items-center gap-1.5 transition-all active:scale-95"
-                    >
-                      {isSubmittingAction ? (
-                        <Loader2 className="size-3.5 animate-spin" />
-                      ) : (
-                        <CheckCircle2 className="size-3.5 text-emerald-200" />
-                      )}
-                      <span>Confirm Service Completed</span>
-                    </Button>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={isSubmittingAction}
-                      onClick={() => setIsReportingIssue(true)}
-                      className="border-rose-300 bg-white hover:bg-rose-50 text-rose-700 font-semibold text-xs px-3.5 py-2.5 rounded-xl cursor-pointer shadow-xs flex items-center gap-1.5 transition-all active:scale-95"
-                    >
-                      <AlertTriangle className="size-3.5 text-rose-600" />
-                      <span>Report an Issue</span>
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {myParticipant && myParticipant.service_status === "verified" && (
-                <div className="bg-emerald-50/70 border border-emerald-200/90 rounded-xl p-3.5 text-xs text-emerald-950 flex items-center gap-2.5">
-                  <CheckCircle className="size-4 text-emerald-600 shrink-0" />
-                  <span>
-                    Thank you! You have confirmed satisfactory completion of this service for <strong>{myParticipant.flat_no}</strong>.
-                    {myParticipant.resident_verified_at && (
-                      <span className="block text-[11px] text-emerald-800/80 mt-0.5">
-                        Verified on {new Date(myParticipant.resident_verified_at).toLocaleString()}
+                  <div>
+                    {!myParticipant && (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#2E3A2F]/70 bg-[#2E3A2F]/5 px-3 py-1 rounded-full border border-[#D9C9B2]">
+                        <Info className="size-4 text-[#2E3A2F]/60" />
+                        <span>Not Joined</span>
                       </span>
                     )}
-                  </span>
-                </div>
-              )}
-
-              {myParticipant && myParticipant.service_status === "issue_reported" && (
-                <div className="bg-rose-50/70 border border-rose-200/90 rounded-xl p-3.5 space-y-2 text-xs text-rose-950">
-                  <div className="flex items-center gap-2 font-semibold text-rose-900">
-                    <AlertTriangle className="size-4 text-rose-600 shrink-0" />
-                    <span>Issue description logged:</span>
+                    {myParticipant && myParticipant.service_status === "verified" && (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-300">
+                        <CheckCircle className="size-4 text-emerald-600" />
+                        <span>Resident Verified</span>
+                      </span>
+                    )}
+                    {myParticipant && myParticipant.service_status === "awaiting_confirmation" && (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-amber-600 px-3 py-1 rounded-full shadow-xs animate-pulse">
+                        <Clock className="size-4 text-white" />
+                        <span>Action Required</span>
+                      </span>
+                    )}
+                    {myParticipant && myParticipant.service_status === "issue_reported" && (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-800 bg-rose-50 px-3 py-1 rounded-full border border-rose-300">
+                        <AlertTriangle className="size-4 text-rose-600" />
+                        <span>Issue Flagged</span>
+                      </span>
+                    )}
+                    {myParticipant && (!myParticipant.service_status ||
+                      myParticipant.service_status === "remaining") && (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#2E3A2F]/70 bg-[#2E3A2F]/5 px-3 py-1 rounded-full border border-[#D9C9B2]">
+                        <Clock className="size-4 text-[#2E3A2F]/60" />
+                        <span>Awaiting Vendor Visit</span>
+                      </span>
+                    )}
                   </div>
-                  <blockquote className="border-l-2 border-rose-300 pl-2.5 text-rose-900 italic text-xs">
-                    &ldquo;{myParticipant.issue_description || "Service incomplete or unsatisfactory"}&rdquo;
-                  </blockquote>
-                  <p className="text-[11px] text-rose-800/80">
-                    Society management and {event.vendor_name || "the vendor"} have been notified to contact you for resolution.
-                  </p>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={isSubmittingAction}
-                    onClick={() => handleResidentVerify(myParticipant.id)}
-                    className="border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-800 text-[11px] font-semibold h-7 px-2.5 cursor-pointer mt-1"
-                  >
-                    Issue Resolved? Confirm Completion
-                  </Button>
                 </div>
-              )}
 
-              {/* Development-Only Diagnostics Box (Safe & Non-Intrusive) */}
-              <div className="mt-3 p-3 rounded-xl bg-gray-50 border border-gray-200 text-[11px] text-[#2E3A2F]/80 space-y-1.5 font-mono">
-                <div className="flex items-center justify-between text-[10px] text-gray-500 uppercase tracking-wider font-semibold">
-                  <span>Resident Status Diagnostics</span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-200 text-gray-700">Privacy Preserved</span>
+                {/* State Explanations & Action Triggers */}
+                {!myParticipant && (
+                  <div className="bg-[#F8F6EE] border border-[#D9C9B2]/80 rounded-xl p-4 text-xs text-[#2E3A2F]/80 space-y-2">
+                    <div className="flex items-center gap-2 font-semibold text-[#2E3A2F]">
+                      <Info className="size-4 text-[#C96F4F] shrink-0" />
+                      <span>You have not joined this booking yet.</span>
+                    </div>
+                    <p className="leading-relaxed">
+                      You must join this society group booking pool with your flat first to schedule service and unlock wholesale society pricing.
+                      Once joined and {event.vendor_name || "the vendor"} marks your service complete from their dashboard, the <strong>Confirm Service</strong> and <strong>Report Issue</strong> actions will appear here for your sign-off.
+                    </p>
+                  </div>
+                )}
+
+                {myParticipant && (!myParticipant.service_status || myParticipant.service_status === "remaining") && (
+                  <div className="bg-[#F8F6EE] border border-[#D9C9B2]/80 rounded-xl p-4 text-xs text-[#2E3A2F]/80 space-y-2">
+                    <div className="flex items-center gap-2 font-semibold text-[#2E3A2F]">
+                      <Clock className="size-4 text-[#6B7F5B] shrink-0" />
+                      <span>Vendor has not marked your flat complete yet.</span>
+                    </div>
+                    <p className="leading-relaxed">
+                      Your flat (<strong>{myParticipant.flat_no}</strong>) is confirmed and enrolled in this pool. Service will be executed during the scheduled slot ({formatSlotTime(event.slot_time)}).
+                      Verification controls (<strong>Confirm Service</strong> and <strong>Report Issue</strong>) will automatically become active here as soon as {event.vendor_name || "the vendor"} finishes the job and records completion on their dashboard.
+                    </p>
+                  </div>
+                )}
+
+                {myParticipant && myParticipant.service_status === "awaiting_confirmation" && (
+                  <div className="bg-amber-50 border border-amber-300 rounded-xl p-4 sm:p-5 space-y-3.5 shadow-xs">
+                    <div className="flex items-start gap-2.5">
+                      <div className="size-8 rounded-lg bg-amber-100 border border-amber-300 flex items-center justify-center text-amber-700 shrink-0 mt-0.5">
+                        <Clock className="size-4 text-amber-600 animate-pulse" />
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="text-sm font-bold text-amber-950">
+                          Vendor marked service complete for Flat {myParticipant.flat_no}
+                        </h4>
+                        <p className="text-xs text-amber-900/90 leading-relaxed">
+                          <strong>{event.vendor_name || "The vendor"}</strong> has finished servicing your flat. Please inspect the work and confirm completion, or report any issue if something was missed.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2.5 pt-1">
+                      <Button
+                        size="sm"
+                        disabled={isSubmittingAction}
+                        onClick={() => handleResidentVerify(myParticipant.id)}
+                        className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs px-4 py-2.5 rounded-xl cursor-pointer shadow-xs flex items-center gap-1.5 transition-all active:scale-95"
+                      >
+                        {isSubmittingAction ? (
+                          <Loader2 className="size-3.5 animate-spin" />
+                        ) : (
+                          <CheckCircle2 className="size-3.5 text-emerald-200" />
+                        )}
+                        <span>Confirm Service</span>
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={isSubmittingAction}
+                        onClick={() => setIsReportingIssue(true)}
+                        className="border-rose-300 bg-white hover:bg-rose-50 text-rose-700 font-semibold text-xs px-3.5 py-2.5 rounded-xl cursor-pointer shadow-xs flex items-center gap-1.5 transition-all active:scale-95"
+                      >
+                        <AlertTriangle className="size-3.5 text-rose-600" />
+                        <span>Report Issue</span>
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {myParticipant && myParticipant.service_status === "verified" && (
+                  <div className="bg-emerald-50/70 border border-emerald-200/90 rounded-xl p-3.5 text-xs text-emerald-950 flex items-center gap-2.5">
+                    <CheckCircle className="size-4 text-emerald-600 shrink-0" />
+                    <span>
+                      Thank you! You have confirmed satisfactory completion of this service for <strong>{myParticipant.flat_no}</strong>.
+                      {myParticipant.resident_verified_at && (
+                        <span className="block text-[11px] text-emerald-800/80 mt-0.5">
+                          Verified on {new Date(myParticipant.resident_verified_at).toLocaleString()}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                )}
+
+                {myParticipant && myParticipant.service_status === "issue_reported" && (
+                  <div className="bg-rose-50/70 border border-rose-200/90 rounded-xl p-3.5 space-y-2 text-xs text-rose-950">
+                    <div className="flex items-center gap-2 font-semibold text-rose-900">
+                      <AlertTriangle className="size-4 text-rose-600 shrink-0" />
+                      <span>Issue description logged:</span>
+                    </div>
+                    <blockquote className="border-l-2 border-rose-300 pl-2.5 text-rose-900 italic text-xs">
+                      &ldquo;{myParticipant.issue_description || "Service incomplete or unsatisfactory"}&rdquo;
+                    </blockquote>
+                    <p className="text-[11px] text-rose-800/80">
+                      Society management and {event.vendor_name || "the vendor"} have been notified to contact you for resolution.
+                    </p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={isSubmittingAction}
+                      onClick={() => handleResidentVerify(myParticipant.id)}
+                      className="border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-800 text-[11px] font-semibold h-7 px-2.5 cursor-pointer mt-1"
+                    >
+                      Issue Resolved? Confirm Completion
+                    </Button>
+                  </div>
+                )}
+
+                {/* Development-Only Diagnostics Box (Safe & Non-Intrusive) */}
+                <div className="mt-3 p-3 rounded-xl bg-gray-50 border border-gray-200 text-[11px] text-[#2E3A2F]/80 space-y-1.5 font-mono">
+                  <div className="flex items-center justify-between text-[10px] text-gray-500 uppercase tracking-wider font-semibold">
+                    <span>Resident Status Diagnostics</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-200 text-gray-700">Privacy Preserved</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
+                    <div>Auth User: <span className="font-semibold text-gray-900">{currentUser?.id ? `${currentUser.id.slice(0, 8)}...` : "None"}</span></div>
+                    <div>Session Role: <span className="font-semibold text-gray-900">{currentUser?.role || "resident"}</span></div>
+                    <div>Resolved Flat: <span className="font-semibold text-gray-900">{currentUser?.flatNo || "None"}</span></div>
+                    <div>Enrolled Participant: <span className="font-semibold text-gray-900">{myParticipant ? `Yes (${myParticipant.flat_no})` : "No"}</span></div>
+                    <div>Participant ID: <span className="font-semibold text-gray-900">{myParticipant ? `${myParticipant.id.slice(0, 8)}...` : "None"}</span></div>
+                    <div>Service Status: <span className={`font-semibold ${myParticipant?.service_status === "awaiting_confirmation" ? "text-amber-700" : myParticipant?.service_status === "verified" ? "text-emerald-700" : myParticipant?.service_status === "issue_reported" ? "text-rose-700" : "text-gray-700"}`}>{myParticipant?.service_status || (myParticipant ? "remaining" : "not_joined")}</span></div>
+                  </div>
+                  <div className="pt-1.5 text-[11px] text-gray-700 font-sans border-t border-gray-200 mt-1">
+                    <strong>Controls Hidden Reason: </strong>
+                    {isVendor && "Resident verification actions are hidden because you are signed in as a vendor."}
+                    {!isVendor && !myParticipant && "Resident verification actions are hidden because you have not joined this group booking yet."}
+                    {!isVendor && myParticipant && (!myParticipant.service_status || myParticipant.service_status === "remaining") && "Resident verification actions are hidden because the vendor has not marked your flat complete yet."}
+                    {!isVendor && myParticipant && myParticipant.service_status === "verified" && "Resident verification actions are hidden because service has already been confirmed and verified."}
+                    {!isVendor && myParticipant && myParticipant.service_status === "issue_reported" && "Resident verification actions are hidden because an issue has already been reported."}
+                    {!isVendor && myParticipant && myParticipant.service_status === "awaiting_confirmation" && "Controls are active: You can Confirm Service or Report an Issue."}
+                  </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
-                  <div>Auth User: <span className="font-semibold text-gray-900">{currentUser?.id ? `${currentUser.id.slice(0, 8)}...` : "None"}</span></div>
-                  <div>Session Role: <span className="font-semibold text-gray-900">{currentUser?.role || "resident"}</span></div>
-                  <div>Resolved Flat: <span className="font-semibold text-gray-900">{currentUser?.flatNo || "None"}</span></div>
-                  <div>Enrolled Participant: <span className="font-semibold text-gray-900">{myParticipant ? `Yes (${myParticipant.flat_no})` : "No"}</span></div>
-                  <div>Participant ID: <span className="font-semibold text-gray-900">{myParticipant ? `${myParticipant.id.slice(0, 8)}...` : "None"}</span></div>
-                  <div>Service Status: <span className={`font-semibold ${myParticipant?.service_status === "awaiting_confirmation" ? "text-amber-700" : myParticipant?.service_status === "verified" ? "text-emerald-700" : myParticipant?.service_status === "issue_reported" ? "text-rose-700" : "text-gray-700"}`}>{myParticipant?.service_status || (myParticipant ? "remaining" : "not_joined")}</span></div>
-                </div>
-                <div className="pt-1.5 text-[11px] text-gray-700 font-sans border-t border-gray-200 mt-1">
-                  <strong>Controls Hidden Reason: </strong>
-                  {!myParticipant && "Resident verification actions are hidden because you have not joined this group booking yet."}
-                  {myParticipant && (!myParticipant.service_status || myParticipant.service_status === "remaining") && "Resident verification actions are hidden because the vendor has not marked your flat complete yet."}
-                  {myParticipant && myParticipant.service_status === "verified" && "Resident verification actions are hidden because service has already been confirmed and verified."}
-                  {myParticipant && myParticipant.service_status === "issue_reported" && "Resident verification actions are hidden because an issue has already been reported."}
-                  {myParticipant && myParticipant.service_status === "awaiting_confirmation" && "Controls are active: You can Confirm Service or Report an Issue."}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
+              </CardContent>
+            </Card>
+          </section>
+        )}
 
         {/* Large Animated Progress Bar Card */}
         <section aria-labelledby="progress-section-title">
@@ -1131,67 +1170,73 @@ ${currentUrl}`;
             </a>
 
             {/* Sticky Action: Either Resident Actions or Join Button */}
-            {myParticipant ? (
-              myParticipant.service_status === "awaiting_confirmation" ? (
-                <div className="flex items-center gap-2 shrink-0">
-                  <Button
-                    size="sm"
-                    disabled={isSubmittingAction}
-                    onClick={() => handleResidentVerify(myParticipant.id)}
-                    className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs px-3.5 sm:px-4 py-2.5 rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 transition-all active:scale-95"
-                  >
-                    {isSubmittingAction ? (
-                      <Loader2 className="size-3.5 animate-spin" />
-                    ) : (
-                      <CheckCircle2 className="size-3.5 text-emerald-200" />
-                    )}
-                    <span>Confirm Service</span>
-                  </Button>
+            {isResident ? (
+              myParticipant ? (
+                myParticipant.service_status === "awaiting_confirmation" ? (
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button
+                      size="sm"
+                      disabled={isSubmittingAction}
+                      onClick={() => handleResidentVerify(myParticipant.id)}
+                      className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs px-3.5 sm:px-4 py-2.5 rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 transition-all active:scale-95"
+                    >
+                      {isSubmittingAction ? (
+                        <Loader2 className="size-3.5 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="size-3.5 text-emerald-200" />
+                      )}
+                      <span>Confirm Service</span>
+                    </Button>
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={isSubmittingAction}
-                    onClick={() => setIsReportingIssue(true)}
-                    className="border-rose-300 bg-white hover:bg-rose-50 text-rose-700 font-semibold text-xs px-3 sm:px-3.5 py-2.5 rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 transition-all active:scale-95"
-                  >
-                    <AlertTriangle className="size-3.5 text-rose-600" />
-                    <span>Report Issue</span>
-                  </Button>
-                </div>
-              ) : myParticipant.service_status === "verified" ? (
-                <div className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2.5 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-semibold shrink-0">
-                  <CheckCircle className="size-4 text-emerald-600" />
-                  <span>Service Verified ({myParticipant.flat_no})</span>
-                </div>
-              ) : myParticipant.service_status === "issue_reported" ? (
-                <div className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2.5 rounded-xl bg-rose-50 border border-rose-300 text-rose-800 text-xs font-semibold shrink-0">
-                  <AlertTriangle className="size-4 text-rose-600" />
-                  <span>Issue Logged ({myParticipant.flat_no})</span>
-                </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={isSubmittingAction}
+                      onClick={() => setIsReportingIssue(true)}
+                      className="border-rose-300 bg-white hover:bg-rose-50 text-rose-700 font-semibold text-xs px-3 sm:px-3.5 py-2.5 rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 transition-all active:scale-95"
+                    >
+                      <AlertTriangle className="size-3.5 text-rose-600" />
+                      <span>Report Issue</span>
+                    </Button>
+                  </div>
+                ) : myParticipant.service_status === "verified" ? (
+                  <div className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2.5 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-semibold shrink-0">
+                    <CheckCircle className="size-4 text-emerald-600" />
+                    <span>Service Verified ({myParticipant.flat_no})</span>
+                  </div>
+                ) : myParticipant.service_status === "issue_reported" ? (
+                  <div className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2.5 rounded-xl bg-rose-50 border border-rose-300 text-rose-800 text-xs font-semibold shrink-0">
+                    <AlertTriangle className="size-4 text-rose-600" />
+                    <span>Issue Logged ({myParticipant.flat_no})</span>
+                  </div>
+                ) : (
+                  <div className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2.5 rounded-xl bg-[#E8E3D6] border border-[#D9C9B2] text-[#2E3A2F] text-xs font-semibold shrink-0">
+                    <CheckCircle2 className="size-4 text-[#6B7F5B]" />
+                    <span>Joined ({myParticipant.flat_no})</span>
+                  </div>
+                )
               ) : (
-                <div className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2.5 rounded-xl bg-[#E8E3D6] border border-[#D9C9B2] text-[#2E3A2F] text-xs font-semibold shrink-0">
-                  <CheckCircle2 className="size-4 text-[#6B7F5B]" />
-                  <span>Joined ({myParticipant.flat_no})</span>
-                </div>
+                <JoinButton
+                  eventId={event.id}
+                  currentPrice={pricing.currentPrice}
+                  label={`Join Group Booking (₹${pricing.currentPrice})`}
+                  disabledLabel={event.status === "cancelled" ? "Booking Cancelled" : "Pool Completed"}
+                  disabled={event.status === "cancelled" || event.status === "completed"}
+                  className="bg-[#C96F4F] hover:bg-[#B85A3A] text-[#F8F6EE] font-semibold text-xs sm:text-sm px-4 sm:px-6 py-2.5 rounded-xl shadow-xs transition-all active:scale-95 shrink-0"
+                  onJoined={() => {
+                    // Optimistic participant join
+                    const randomFlat = `Flat ${Math.floor(Math.random() * 900 + 100)}`;
+                    setParticipants((prev) => [
+                      ...prev,
+                      { id: crypto.randomUUID(), flat_no: randomFlat },
+                    ]);
+                  }}
+                />
               )
             ) : (
-              <JoinButton
-                eventId={event.id}
-                currentPrice={pricing.currentPrice}
-                label={`Join Group Booking (₹${pricing.currentPrice})`}
-                disabledLabel={event.status === "cancelled" ? "Booking Cancelled" : "Pool Completed"}
-                disabled={event.status === "cancelled" || event.status === "completed"}
-                className="bg-[#C96F4F] hover:bg-[#B85A3A] text-[#F8F6EE] font-semibold text-xs sm:text-sm px-4 sm:px-6 py-2.5 rounded-xl shadow-xs transition-all active:scale-95 shrink-0"
-                onJoined={() => {
-                  // Optimistic participant join
-                  const randomFlat = `Flat ${Math.floor(Math.random() * 900 + 100)}`;
-                  setParticipants((prev) => [
-                    ...prev,
-                    { id: crypto.randomUUID(), flat_no: randomFlat },
-                  ]);
-                }}
-              />
+              <Badge className="bg-[#2E3A2F] text-[#F8F6EE] text-xs font-semibold px-3 py-1.5 rounded-xl border-none">
+                Vendor Portal
+              </Badge>
             )}
           </div>
         </div>

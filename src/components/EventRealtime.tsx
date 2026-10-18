@@ -333,44 +333,62 @@ export function EventRealtime({
           )}
         </div>
 
-        {userParticipant ? (
-          userParticipant.service_status === "awaiting_confirmation" ? (
-            <Link href={`/event/${eventId}`}>
-              <Button
-                size="sm"
-                className="bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs px-3.5 py-2 rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 transition-all active:scale-95 animate-pulse"
-              >
-                <Clock className="size-3.5" />
-                <span>Confirm Service (Flat {userParticipant.flat_no})</span>
-              </Button>
-            </Link>
-          ) : userParticipant.service_status === "verified" ? (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-semibold">
-              <CheckCircle className="size-3.5 text-emerald-600" />
-              <span>Service Verified ({userParticipant.flat_no})</span>
-            </div>
-          ) : userParticipant.service_status === "issue_reported" ? (
-            <Link href={`/event/${eventId}`}>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 border border-rose-300 text-rose-800 text-xs font-semibold hover:bg-rose-100 transition-colors cursor-pointer">
-                <AlertTriangle className="size-3.5 text-rose-600" />
-                <span>Issue Logged ({userParticipant.flat_no})</span>
+        <div className="flex items-center gap-2">
+          {/* Mobile Details button ensuring prominent, predictable navigation on mobile screens */}
+          <Link
+            href={`/event/${eventId}`}
+            onClick={(e) => e.stopPropagation()}
+            className="sm:hidden"
+          >
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-[#D9C9B2] text-[#2E3A2F] text-xs h-8 px-2.5 rounded-xl hover:bg-[#FAF9F5] flex items-center gap-1 cursor-pointer"
+            >
+              <span>Details</span>
+              <ChevronRight className="size-3.5 text-[#C96F4F]" />
+            </Button>
+          </Link>
+
+          {userParticipant ? (
+            userParticipant.service_status === "awaiting_confirmation" ? (
+              <Link href={`/event/${eventId}`} onClick={(e) => e.stopPropagation()}>
+                <Button
+                  size="sm"
+                  className="bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs px-3.5 py-2 rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 transition-all active:scale-95 animate-pulse"
+                >
+                  <Clock className="size-3.5" />
+                  <span>Confirm Service (Flat {userParticipant.flat_no})</span>
+                </Button>
+              </Link>
+            ) : userParticipant.service_status === "verified" ? (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-semibold">
+                <CheckCircle className="size-3.5 text-emerald-600" />
+                <span>Service Verified ({userParticipant.flat_no})</span>
               </div>
-            </Link>
+            ) : userParticipant.service_status === "issue_reported" ? (
+              <Link href={`/event/${eventId}`} onClick={(e) => e.stopPropagation()}>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 border border-rose-300 text-rose-800 text-xs font-semibold hover:bg-rose-100 transition-colors cursor-pointer">
+                  <AlertTriangle className="size-3.5 text-rose-600" />
+                  <span>Issue Logged ({userParticipant.flat_no})</span>
+                </div>
+              </Link>
+            ) : (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#E8E3D6] border border-[#D9C9B2] text-[#2E3A2F] text-xs font-semibold">
+                <CheckCircle2 className="size-3.5 text-[#6B7F5B]" />
+                <span>Joined ({userParticipant.flat_no})</span>
+              </div>
+            )
           ) : (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#E8E3D6] border border-[#D9C9B2] text-[#2E3A2F] text-xs font-semibold">
-              <CheckCircle2 className="size-3.5 text-[#6B7F5B]" />
-              <span>Joined ({userParticipant.flat_no})</span>
-            </div>
-          )
-        ) : (
-          <JoinButton
-            eventId={eventId}
-            currentPrice={pricing.currentPrice}
-            onJoined={handleOptimisticJoin}
-            disabled={eventStatus === "cancelled"}
-            disabledLabel="Booking Cancelled"
-          />
-        )}
+            <JoinButton
+              eventId={eventId}
+              currentPrice={pricing.currentPrice}
+              onJoined={handleOptimisticJoin}
+              disabled={eventStatus === "cancelled"}
+              disabledLabel="Booking Cancelled"
+            />
+          )}
+        </div>
       </div>
     </div>
   );

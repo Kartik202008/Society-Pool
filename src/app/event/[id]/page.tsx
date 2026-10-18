@@ -6,6 +6,7 @@ import { ArrowLeft, CalendarX2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
+import { getUserRole } from "@/lib/auth";
 import { EventDetailClient } from "@/components/event/event-detail-client";
 import type { DatabaseEventRow } from "@/types";
 
@@ -70,6 +71,8 @@ export default async function EventPage({ params }: EventPageProps) {
   const cookieStore = await cookies();
   const demoRole = cookieStore.get("demo_role")?.value;
 
+  const userRole = await getUserRole(supabase, user, demoRole);
+
   let userFlatNo: string | null = null;
   if (user) {
     try {
@@ -77,13 +80,30 @@ export default async function EventPage({ params }: EventPageProps) {
         .from("users")
         .select("flat_no")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
       if (profile?.flat_no) userFlatNo = profile.flat_no;
     } catch (err) {
       console.warn("Could not load user flat_no:", err);
     }
     if (!userFlatNo && user.user_metadata?.flat_no) {
       userFlatNo = user.user_metadata.flat_no;
+    }
+  }
+
+  // If userFlatNo is still not resolved and user is logged in, check if user has enrolled in any booking
+  if (user && !userFlatNo) {
+    try {
+      const { data: userAnyPart } = await supabase
+        .from("participants")
+        .select("flat_no")
+        .eq("user_id", user.id)
+        .limit(1)
+        .maybeSingle();
+      if (userAnyPart?.flat_no) {
+        userFlatNo = userAnyPart.flat_no;
+      }
+    } catch {
+      // ignore
     }
   }
 
@@ -117,35 +137,37 @@ export default async function EventPage({ params }: EventPageProps) {
 
   const participants = rawParticipants || [];
 
-  // Find enrolled participant for the current resident session
+  // Find enrolled participant strictly for the current resident session
   let enrolledParticipant: any = null;
-  if (user) {
-    enrolledParticipant = participants.find((p: any) => p.user_id === user.id);
-    if (!enrolledParticipant && userFlatNo) {
-      enrolledParticipant = participants.find(
-        (p: any) =>
-          (p.flat_no || "").toLowerCase().trim() === userFlatNo!.toLowerCase().trim()
-      );
+  if (userRole !== "vendor") {
+    if (user) {
+      enrolledParticipant = participants.find((p: any) => p.user_id === user.id);
+      if (!enrolledParticipant && userFlatNo) {
+        enrolledParticipant = participants.find(
+          (p: any) =>
+            (p.flat_no || "").toLowerCase().trim() === userFlatNo!.toLowerCase().trim()
+        );
+      }
+      if (enrolledParticipant && !userFlatNo) {
+        userFlatNo = enrolledParticipant.flat_no;
+      }
     }
-    if (enrolledParticipant && !userFlatNo) {
-      userFlatNo = enrolledParticipant.flat_no;
-    }
-  }
 
-  // Fallback for demo resident or simulation mode
-  if (!enrolledParticipant && (!user || demoRole === "resident")) {
-    enrolledParticipant =
-      participants.find((p: any) => p.service_status === "awaiting_confirmation") ||
-      participants.find((p: any) =>
-        ["b-234", "b-402", "flat 565", "flat 994", "flat 256", "flat 904"].includes(
-          (p.flat_no || "").toLowerCase().trim()
-        )
-      ) ||
-      participants[0] ||
-      null;
+    // Fallback for demo resident or simulation mode
+    if (!enrolledParticipant && (!user || demoRole === "resident" || userRole === "admin")) {
+      enrolledParticipant =
+        participants.find((p: any) => p.service_status === "awaiting_confirmation") ||
+        participants.find((p: any) =>
+          ["b-234", "b-402", "flat 565", "flat 994", "flat 256", "flat 904"].includes(
+            (p.flat_no || "").toLowerCase().trim()
+          )
+        ) ||
+        participants[0] ||
+        null;
 
-    if (enrolledParticipant && !userFlatNo) {
-      userFlatNo = enrolledParticipant.flat_no;
+      if (enrolledParticipant && !userFlatNo) {
+        userFlatNo = enrolledParticipant.flat_no;
+      }
     }
   }
 
@@ -155,9 +177,9 @@ export default async function EventPage({ params }: EventPageProps) {
   };
 
   const currentUser = {
-    id: user?.id || (demoRole === "resident" ? (enrolledParticipant?.user_id || "demo-resident") : null),
-    flatNo: userFlatNo,
-    role: demoRole || (user ? "resident" : null),
+    id: user?.id || (userRole !== "vendor" ? (enrolledParticipant?.user_id || "demo-resident") : null),
+    flatNo: userFlatNo || enrolledParticipant?.flat_no || null,
+    role: userRole,
     participantId: enrolledParticipant?.id || null,
   };
 

@@ -119,7 +119,9 @@ async function ActiveEventsList() {
           (p) => (p.flat_no || "").toLowerCase().trim() === userFlatNo!.toLowerCase().trim()
         );
       }
-    } else if (demoRole === "resident") {
+    }
+
+    if (!myParticipant && (!user || demoRole === "resident" || !demoRole)) {
       myParticipant =
         participantsList.find((p) => p.service_status === "awaiting_confirmation") ||
         participantsList.find((p) =>
@@ -281,7 +283,8 @@ async function ActiveEventsList() {
               <div className="flex items-center gap-2 shrink-0">
                 <Link
                   href={`/event/${event.id}`}
-                  className="hidden sm:inline-flex items-center gap-0.5 text-xs font-semibold text-[#C96F4F] hover:text-[#B85A3A] hover:underline"
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-[#C96F4F] hover:text-[#B85A3A] hover:underline px-2.5 py-1 rounded-lg bg-[#FAF9F5] sm:bg-transparent border border-[#D9C9B2]/70 sm:border-transparent transition-colors z-10 shrink-0"
                 >
                   <span>Details</span>
                   <ChevronRight className="size-3.5" />
