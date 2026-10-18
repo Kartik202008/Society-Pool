@@ -283,7 +283,6 @@ async function ActiveEventsList() {
               <div className="flex items-center gap-2 shrink-0">
                 <Link
                   href={`/event/${event.id}`}
-                  onClick={(e) => e.stopPropagation()}
                   className="inline-flex items-center gap-1 text-xs font-semibold text-[#C96F4F] hover:text-[#B85A3A] hover:underline px-2.5 py-1 rounded-lg bg-[#FAF9F5] sm:bg-transparent border border-[#D9C9B2]/70 sm:border-transparent transition-colors z-10 shrink-0"
                 >
                   <span>Details</span>
